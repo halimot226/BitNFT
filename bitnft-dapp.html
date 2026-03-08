@@ -1,0 +1,1386 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>BitNFT — OpNet Testnet</title>
+<link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;600;700;800&family=Space+Mono:wght@400;700&family=DM+Sans:wght@300;400;500&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg: #050508;
+    --bg2: #0a0a10;
+    --bg3: #0f0f1a;
+    --panel: #12121f;
+    --panel2: #1a1a2e;
+    --border: #2a2a45;
+    --border2: #3a3a60;
+    --orange: #f7931a;
+    --orange2: #ff6b00;
+    --orange-glow: rgba(247,147,26,0.15);
+    --cyan: #00d4ff;
+    --cyan2: #00ffcc;
+    --purple: #9b59ff;
+    --green: #00ff88;
+    --red: #ff4466;
+    --text: #e8e8ff;
+    --text2: #9090bb;
+    --text3: #5a5a88;
+    --pill-color: #e91e8c;
+    --moto-color: #9b59ff;
+    --tbtc-color: #f7931a;
+  }
+  * { margin:0; padding:0; box-sizing:border-box; }
+  html { scroll-behavior: smooth; }
+  body {
+    background: var(--bg);
+    color: var(--text);
+    font-family: 'DM Sans', sans-serif;
+    min-height: 100vh;
+    overflow-x: hidden;
+  }
+
+  /* GRID BG */
+  body::before {
+    content: '';
+    position: fixed;
+    inset: 0;
+    background-image:
+      linear-gradient(rgba(247,147,26,0.03) 1px, transparent 1px),
+      linear-gradient(90deg, rgba(247,147,26,0.03) 1px, transparent 1px);
+    background-size: 40px 40px;
+    pointer-events: none;
+    z-index: 0;
+  }
+
+  /* SCROLLBAR */
+  ::-webkit-scrollbar { width: 6px; }
+  ::-webkit-scrollbar-track { background: var(--bg2); }
+  ::-webkit-scrollbar-thumb { background: var(--border2); border-radius: 3px; }
+
+  /* NAVBAR */
+  nav {
+    position: fixed; top: 0; left: 0; right: 0; z-index: 1000;
+    background: rgba(5,5,8,0.92);
+    backdrop-filter: blur(20px);
+    border-bottom: 1px solid var(--border);
+    display: flex; align-items: center; justify-content: space-between;
+    padding: 0 24px; height: 64px;
+  }
+  .nav-logo {
+    font-family: 'Syne', sans-serif;
+    font-weight: 800; font-size: 22px;
+    display: flex; align-items: center; gap: 10px;
+    cursor: pointer;
+  }
+  .logo-icon {
+    width: 34px; height: 34px;
+    background: linear-gradient(135deg, var(--orange), var(--orange2));
+    border-radius: 8px;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 18px; box-shadow: 0 0 20px var(--orange-glow);
+  }
+  .logo-text { background: linear-gradient(90deg, var(--orange), var(--cyan)); -webkit-background-clip: text; -webkit-text-fill-color: transparent; }
+  .nav-tabs {
+    display: flex; gap: 4px;
+    background: var(--panel); border-radius: 10px; padding: 4px;
+  }
+  .nav-tab {
+    padding: 8px 16px; border-radius: 7px;
+    font-family: 'Space Mono', monospace; font-size: 12px;
+    cursor: pointer; transition: all 0.2s; border: none; background: none;
+    color: var(--text2);
+  }
+  .nav-tab:hover { color: var(--text); background: var(--panel2); }
+  .nav-tab.active { background: linear-gradient(135deg, var(--orange), var(--orange2)); color: #000; font-weight: 700; }
+  .nav-right { display: flex; align-items: center; gap: 12px; }
+  .network-badge {
+    display: flex; align-items: center; gap: 6px;
+    background: rgba(0,212,255,0.1); border: 1px solid rgba(0,212,255,0.3);
+    border-radius: 20px; padding: 5px 12px;
+    font-family: 'Space Mono', monospace; font-size: 11px; color: var(--cyan);
+  }
+  .net-dot { width: 6px; height: 6px; border-radius: 50%; background: var(--green); animation: pulse-dot 2s infinite; }
+  @keyframes pulse-dot { 0%,100%{opacity:1;transform:scale(1)} 50%{opacity:0.5;transform:scale(0.8)} }
+  .connect-btn {
+    padding: 9px 20px; border-radius: 8px;
+    background: linear-gradient(135deg, var(--orange), var(--orange2));
+    border: none; color: #000; font-family: 'Syne', sans-serif;
+    font-weight: 700; font-size: 13px; cursor: pointer;
+    transition: all 0.2s; box-shadow: 0 4px 15px rgba(247,147,26,0.3);
+  }
+  .connect-btn:hover { transform: translateY(-1px); box-shadow: 0 6px 25px rgba(247,147,26,0.5); }
+  .connect-btn.connected {
+    background: var(--panel2); border: 1px solid var(--border2);
+    color: var(--text); box-shadow: none;
+  }
+
+  /* PAGES */
+  .page { display: none; padding-top: 80px; min-height: 100vh; position: relative; z-index: 1; }
+  .page.active { display: block; }
+
+  /* HERO */
+  .hero {
+    padding: 60px 24px 40px;
+    text-align: center;
+    position: relative;
+  }
+  .hero-glow {
+    position: absolute; top: 0; left: 50%; transform: translateX(-50%);
+    width: 600px; height: 300px;
+    background: radial-gradient(ellipse, rgba(247,147,26,0.12) 0%, transparent 70%);
+    pointer-events: none;
+  }
+  .hero h1 {
+    font-family: 'Syne', sans-serif; font-weight: 800; font-size: clamp(32px,5vw,64px);
+    line-height: 1.1; margin-bottom: 16px;
+  }
+  .hero h1 span { background: linear-gradient(90deg, var(--orange), var(--cyan)); -webkit-background-clip: text; -webkit-text-fill-color: transparent; }
+  .hero p { color: var(--text2); font-size: 16px; max-width: 500px; margin: 0 auto 32px; }
+  .hero-stats {
+    display: flex; justify-content: center; gap: 40px; flex-wrap: wrap;
+    margin-bottom: 32px;
+  }
+  .hero-stat { text-align: center; }
+  .hero-stat-val { font-family: 'Syne', sans-serif; font-weight: 700; font-size: 28px; color: var(--orange); }
+  .hero-stat-lbl { font-size: 12px; color: var(--text3); text-transform: uppercase; letter-spacing: 1px; }
+
+  /* LAYOUT */
+  .container { max-width: 1280px; margin: 0 auto; padding: 0 24px; }
+  .section-title {
+    font-family: 'Syne', sans-serif; font-weight: 700; font-size: 22px;
+    margin-bottom: 20px; display: flex; align-items: center; gap: 10px;
+  }
+  .section-title .dot { width: 8px; height: 8px; border-radius: 50%; background: var(--orange); }
+
+  /* GRID LAYOUTS */
+  .nft-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(240px, 1fr)); gap: 16px; }
+  .nft-grid-lg { display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap: 20px; }
+
+  /* NFT CARD */
+  .nft-card {
+    background: var(--panel);
+    border: 1px solid var(--border);
+    border-radius: 16px; overflow: hidden;
+    cursor: pointer; transition: all 0.3s;
+    position: relative;
+  }
+  .nft-card:hover { transform: translateY(-4px); border-color: var(--orange); box-shadow: 0 12px 40px rgba(247,147,26,0.2); }
+  .nft-card-img {
+    width: 100%; aspect-ratio: 1;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 64px; position: relative; overflow: hidden;
+  }
+  .nft-card-badge {
+    position: absolute; top: 10px; right: 10px;
+    background: rgba(0,0,0,0.7); border: 1px solid var(--border2);
+    border-radius: 20px; padding: 3px 10px;
+    font-family: 'Space Mono', monospace; font-size: 11px; color: var(--cyan);
+  }
+  .nft-card-body { padding: 14px; }
+  .nft-card-name { font-family: 'Syne', sans-serif; font-weight: 700; font-size: 15px; margin-bottom: 4px; }
+  .nft-card-col { font-size: 12px; color: var(--text3); margin-bottom: 12px; }
+  .nft-card-row { display: flex; justify-content: space-between; align-items: center; }
+  .nft-price { font-family: 'Space Mono', monospace; font-size: 14px; color: var(--orange); font-weight: 700; }
+  .nft-price-usd { font-size: 11px; color: var(--text3); }
+  .nft-vol { font-size: 11px; color: var(--text2); }
+  .nft-card-actions { display: flex; gap: 8px; margin-top: 12px; }
+  .btn-buy {
+    flex: 1; padding: 9px; border-radius: 8px;
+    background: linear-gradient(135deg, var(--orange), var(--orange2));
+    border: none; color: #000; font-weight: 700; font-size: 13px;
+    cursor: pointer; transition: all 0.2s; font-family: 'Syne', sans-serif;
+  }
+  .btn-buy:hover { filter: brightness(1.1); }
+  .btn-swap {
+    padding: 9px 14px; border-radius: 8px;
+    background: var(--panel2); border: 1px solid var(--border2);
+    color: var(--text2); font-size: 12px; cursor: pointer;
+    transition: all 0.2s;
+  }
+  .btn-swap:hover { border-color: var(--cyan); color: var(--cyan); }
+  .hot-badge {
+    position: absolute; top: 10px; left: 10px;
+    background: linear-gradient(135deg, var(--orange), var(--red));
+    border-radius: 4px; padding: 2px 8px;
+    font-size: 10px; font-weight: 700; color: #fff;
+    font-family: 'Space Mono', monospace;
+  }
+
+  /* STATS CARDS */
+  .stats-row { display: grid; grid-template-columns: repeat(auto-fill, minmax(200px, 1fr)); gap: 12px; margin-bottom: 32px; }
+  .stat-card {
+    background: var(--panel); border: 1px solid var(--border);
+    border-radius: 12px; padding: 18px;
+  }
+  .stat-label { font-size: 11px; color: var(--text3); text-transform: uppercase; letter-spacing: 1px; margin-bottom: 8px; }
+  .stat-value { font-family: 'Syne', sans-serif; font-weight: 700; font-size: 24px; }
+  .stat-change { font-size: 12px; margin-top: 4px; }
+  .up { color: var(--green); }
+  .down { color: var(--red); }
+
+  /* LEADERBOARD */
+  .leaderboard-table { width: 100%; border-collapse: collapse; }
+  .leaderboard-table th {
+    text-align: left; padding: 10px 16px;
+    font-family: 'Space Mono', monospace; font-size: 11px;
+    color: var(--text3); text-transform: uppercase; letter-spacing: 1px;
+    border-bottom: 1px solid var(--border);
+  }
+  .leaderboard-table td { padding: 14px 16px; border-bottom: 1px solid rgba(42,42,69,0.5); }
+  .leaderboard-table tr:hover td { background: var(--panel2); }
+  .rank-num { font-family: 'Space Mono', monospace; font-size: 14px; color: var(--text3); }
+  .rank-1 .rank-num { color: #ffd700; }
+  .rank-2 .rank-num { color: #c0c0c0; }
+  .rank-3 .rank-num { color: #cd7f32; }
+  .coll-info { display: flex; align-items: center; gap: 10px; }
+  .coll-thumb { width: 40px; height: 40px; border-radius: 8px; display: flex; align-items: center; justify-content: center; font-size: 22px; }
+  .coll-name { font-weight: 600; font-size: 14px; }
+  .coll-items { font-size: 12px; color: var(--text3); }
+  .vol-bar-wrap { display: flex; align-items: center; gap: 10px; }
+  .vol-bar { height: 4px; border-radius: 2px; background: linear-gradient(90deg, var(--orange), var(--cyan)); }
+
+  /* PANELS */
+  .panel {
+    background: var(--panel); border: 1px solid var(--border);
+    border-radius: 16px; padding: 24px;
+  }
+  .panel-title {
+    font-family: 'Syne', sans-serif; font-weight: 700; font-size: 17px;
+    margin-bottom: 20px; display: flex; align-items: center; gap: 8px;
+  }
+
+  /* FILTERS */
+  .filter-row { display: flex; gap: 8px; flex-wrap: wrap; margin-bottom: 24px; align-items: center; }
+  .filter-chip {
+    padding: 7px 16px; border-radius: 20px;
+    border: 1px solid var(--border); background: var(--panel);
+    color: var(--text2); font-size: 13px; cursor: pointer;
+    transition: all 0.2s;
+  }
+  .filter-chip:hover { border-color: var(--orange); color: var(--orange); }
+  .filter-chip.active { background: var(--orange-glow); border-color: var(--orange); color: var(--orange); }
+  .search-input {
+    flex: 1; min-width: 200px; max-width: 320px;
+    padding: 8px 16px; border-radius: 20px;
+    background: var(--panel); border: 1px solid var(--border);
+    color: var(--text); font-size: 14px; outline: none;
+    transition: border-color 0.2s;
+  }
+  .search-input:focus { border-color: var(--orange); }
+  .search-input::placeholder { color: var(--text3); }
+
+  /* CREATE NFT FORM */
+  .create-form { display: grid; grid-template-columns: 1fr 1fr; gap: 24px; }
+  @media(max-width:768px){ .create-form { grid-template-columns: 1fr; } }
+  .form-group { margin-bottom: 16px; }
+  .form-label { display: block; font-size: 13px; color: var(--text2); margin-bottom: 8px; font-family:'Space Mono',monospace; }
+  .form-input, .form-select, .form-textarea {
+    width: 100%; padding: 12px 16px; border-radius: 10px;
+    background: var(--bg3); border: 1px solid var(--border);
+    color: var(--text); font-size: 14px; outline: none;
+    transition: border-color 0.2s; font-family: 'DM Sans', sans-serif;
+  }
+  .form-input:focus, .form-select:focus, .form-textarea:focus { border-color: var(--orange); }
+  .form-select { appearance: none; cursor: pointer; }
+  .form-textarea { resize: vertical; min-height: 100px; }
+  .upload-zone {
+    border: 2px dashed var(--border); border-radius: 12px;
+    padding: 40px; text-align: center; cursor: pointer;
+    transition: all 0.2s; background: var(--bg3);
+  }
+  .upload-zone:hover { border-color: var(--orange); background: var(--orange-glow); }
+  .upload-icon { font-size: 48px; margin-bottom: 12px; }
+  .upload-text { color: var(--text2); font-size: 14px; }
+  .trait-row { display: flex; gap: 8px; margin-bottom: 8px; }
+  .btn-add-trait {
+    padding: 8px 16px; border-radius: 8px;
+    background: var(--panel2); border: 1px solid var(--border2);
+    color: var(--text2); font-size: 13px; cursor: pointer;
+    transition: all 0.2s;
+  }
+  .btn-add-trait:hover { border-color: var(--cyan); color: var(--cyan); }
+  .btn-mint {
+    width: 100%; padding: 14px; border-radius: 10px;
+    background: linear-gradient(135deg, var(--orange), var(--orange2));
+    border: none; color: #000; font-family: 'Syne', sans-serif;
+    font-weight: 800; font-size: 16px; cursor: pointer;
+    transition: all 0.2s; box-shadow: 0 4px 20px rgba(247,147,26,0.4);
+    margin-top: 8px;
+  }
+  .btn-mint:hover { transform: translateY(-2px); box-shadow: 0 8px 30px rgba(247,147,26,0.6); }
+
+  /* SWAP MODAL */
+  .modal-overlay {
+    display: none; position: fixed; inset: 0; z-index: 2000;
+    background: rgba(0,0,0,0.8); backdrop-filter: blur(6px);
+    align-items: center; justify-content: center;
+  }
+  .modal-overlay.open { display: flex; }
+  .modal {
+    background: var(--panel); border: 1px solid var(--border2);
+    border-radius: 20px; padding: 28px; width: 100%; max-width: 440px;
+    position: relative; animation: modal-in 0.3s ease;
+  }
+  @keyframes modal-in { from{transform:scale(0.95);opacity:0} to{transform:scale(1);opacity:1} }
+  .modal-close {
+    position: absolute; top: 16px; right: 16px;
+    background: var(--panel2); border: 1px solid var(--border);
+    color: var(--text2); width: 32px; height: 32px; border-radius: 50%;
+    cursor: pointer; font-size: 18px; display: flex; align-items: center; justify-content: center;
+  }
+  .modal-title { font-family: 'Syne', sans-serif; font-weight: 700; font-size: 20px; margin-bottom: 20px; }
+  .swap-nft-preview {
+    display: flex; align-items: center; gap: 14px;
+    background: var(--bg3); border-radius: 12px; padding: 14px; margin-bottom: 16px;
+  }
+  .swap-nft-art { font-size: 40px; }
+  .swap-nft-name { font-weight: 600; font-size: 15px; }
+  .swap-nft-price { font-family: 'Space Mono', monospace; font-size: 13px; color: var(--orange); }
+  .token-selector {
+    display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; margin-bottom: 16px;
+  }
+  .token-option {
+    padding: 12px; border-radius: 10px; text-align: center;
+    border: 2px solid var(--border); cursor: pointer; transition: all 0.2s;
+    background: var(--bg3);
+  }
+  .token-option:hover { border-color: var(--border2); }
+  .token-option.selected-tbtc { border-color: var(--tbtc-color); background: rgba(247,147,26,0.1); }
+  .token-option.selected-pill { border-color: var(--pill-color); background: rgba(233,30,140,0.1); }
+  .token-option.selected-moto { border-color: var(--moto-color); background: rgba(155,89,255,0.1); }
+  .token-icon { font-size: 24px; margin-bottom: 4px; }
+  .token-name { font-family: 'Space Mono', monospace; font-size: 11px; font-weight: 700; }
+  .token-rate { font-size: 11px; color: var(--text3); margin-top: 2px; }
+  .swap-amount-box {
+    background: var(--bg3); border: 1px solid var(--border); border-radius: 12px;
+    padding: 16px; margin-bottom: 16px;
+  }
+  .swap-amount-label { font-size: 12px; color: var(--text3); margin-bottom: 8px; }
+  .swap-amount-val { font-family: 'Space Mono', monospace; font-size: 28px; font-weight: 700; }
+  .swap-amount-token { font-size: 14px; color: var(--text2); margin-top: 4px; }
+  .btn-confirm-swap {
+    width: 100%; padding: 14px; border-radius: 10px;
+    background: linear-gradient(135deg, var(--cyan), var(--purple));
+    border: none; color: #fff; font-family: 'Syne', sans-serif;
+    font-weight: 800; font-size: 15px; cursor: pointer;
+    transition: all 0.2s;
+  }
+  .btn-confirm-swap:hover { filter: brightness(1.1); transform: translateY(-1px); }
+
+  /* PROFILE */
+  .profile-header {
+    background: var(--panel); border: 1px solid var(--border);
+    border-radius: 16px; padding: 28px; margin-bottom: 24px;
+    display: flex; align-items: center; gap: 24px; flex-wrap: wrap;
+  }
+  .profile-avatar {
+    width: 80px; height: 80px; border-radius: 50%;
+    background: linear-gradient(135deg, var(--orange), var(--purple));
+    display: flex; align-items: center; justify-content: center;
+    font-size: 36px; flex-shrink: 0;
+    box-shadow: 0 0 30px rgba(247,147,26,0.3);
+  }
+  .profile-address { font-family: 'Space Mono', monospace; font-size: 14px; color: var(--text2); }
+  .profile-stats { display: flex; gap: 32px; flex-wrap: wrap; margin-top: 12px; }
+  .profile-stat-val { font-family: 'Syne', sans-serif; font-weight: 700; font-size: 22px; }
+  .profile-stat-lbl { font-size: 12px; color: var(--text3); }
+  .profile-name { font-family: 'Syne', sans-serif; font-weight: 700; font-size: 22px; }
+
+  /* ACTIVITY / TRACKING */
+  .activity-list { display: flex; flex-direction: column; gap: 10px; }
+  .activity-item {
+    display: flex; align-items: center; gap: 14px;
+    background: var(--panel); border: 1px solid var(--border);
+    border-radius: 12px; padding: 14px 16px;
+    transition: border-color 0.2s;
+  }
+  .activity-item:hover { border-color: var(--border2); }
+  .activity-icon { font-size: 28px; flex-shrink: 0; }
+  .activity-info { flex: 1; }
+  .activity-title { font-size: 14px; font-weight: 500; }
+  .activity-sub { font-size: 12px; color: var(--text3); margin-top: 2px; }
+  .activity-right { text-align: right; }
+  .activity-price { font-family: 'Space Mono', monospace; font-size: 14px; color: var(--orange); }
+  .activity-status { font-size: 11px; margin-top: 3px; padding: 2px 8px; border-radius: 10px; display: inline-block; }
+  .status-completed { background: rgba(0,255,136,0.1); color: var(--green); }
+  .status-pending { background: rgba(247,147,26,0.1); color: var(--orange); }
+  .status-listed { background: rgba(0,212,255,0.1); color: var(--cyan); }
+  .status-swapped { background: rgba(155,89,255,0.1); color: var(--purple); }
+  .progress-track {
+    background: var(--bg3); border-radius: 8px; height: 6px; margin-top: 8px; overflow: hidden;
+  }
+  .progress-fill {
+    height: 100%; border-radius: 8px;
+    background: linear-gradient(90deg, var(--orange), var(--cyan));
+    transition: width 1s ease;
+  }
+
+  /* TABS inside pages */
+  .page-tabs { display: flex; gap: 4px; background: var(--panel); border-radius: 10px; padding: 4px; margin-bottom: 24px; width: fit-content; }
+  .page-tab { padding: 9px 20px; border-radius: 7px; cursor: pointer; font-size: 14px; font-weight: 500; transition: all 0.2s; }
+  .page-tab.active { background: var(--orange); color: #000; font-weight: 700; }
+  .page-tab:not(.active) { color: var(--text2); }
+  .page-tab:not(.active):hover { color: var(--text); }
+
+  /* VOLUME CHART */
+  .vol-chart { display: flex; align-items: flex-end; gap: 4px; height: 80px; padding: 8px 0; }
+  .vol-bar-chart {
+    flex: 1; border-radius: 3px 3px 0 0;
+    background: linear-gradient(180deg, var(--orange), rgba(247,147,26,0.3));
+    transition: height 0.5s ease; cursor: pointer;
+    position: relative;
+  }
+  .vol-bar-chart:hover { background: linear-gradient(180deg, var(--cyan), rgba(0,212,255,0.3)); }
+  .vol-bar-chart::after {
+    content: attr(data-val);
+    position: absolute; bottom: 105%; left: 50%; transform: translateX(-50%);
+    background: var(--panel); border: 1px solid var(--border);
+    border-radius: 4px; padding: 2px 6px; font-size: 10px;
+    white-space: nowrap; display: none;
+  }
+  .vol-bar-chart:hover::after { display: block; }
+
+  /* TOAST */
+  .toast {
+    position: fixed; bottom: 24px; right: 24px; z-index: 9999;
+    background: var(--panel); border: 1px solid var(--border2);
+    border-radius: 12px; padding: 14px 20px;
+    display: flex; align-items: center; gap: 10px;
+    transform: translateY(100px); opacity: 0;
+    transition: all 0.3s; max-width: 320px;
+  }
+  .toast.show { transform: translateY(0); opacity: 1; }
+  .toast-icon { font-size: 22px; }
+  .toast-text { font-size: 14px; }
+
+  /* WALLET MODAL */
+  .wallet-modal {
+    background: var(--panel); border: 1px solid var(--border2);
+    border-radius: 20px; padding: 28px; width: 100%; max-width: 380px;
+    position: relative; animation: modal-in 0.3s ease;
+  }
+  .wallet-option {
+    display: flex; align-items: center; gap: 14px;
+    background: var(--bg3); border: 1px solid var(--border);
+    border-radius: 12px; padding: 16px; margin-bottom: 10px;
+    cursor: pointer; transition: all 0.2s;
+  }
+  .wallet-option:hover { border-color: var(--orange); background: var(--orange-glow); }
+  .wallet-logo { font-size: 32px; }
+  .wallet-name { font-weight: 600; font-size: 15px; }
+  .wallet-desc { font-size: 12px; color: var(--text3); }
+
+  /* NFT DETAIL MODAL */
+  .nft-detail-modal {
+    background: var(--panel); border: 1px solid var(--border2);
+    border-radius: 20px; padding: 0; width: 100%; max-width: 700px;
+    position: relative; animation: modal-in 0.3s ease; overflow: hidden;
+  }
+  .nft-detail-top { display: grid; grid-template-columns: 1fr 1fr; }
+  @media(max-width:600px){ .nft-detail-top { grid-template-columns: 1fr; } }
+  .nft-detail-art {
+    aspect-ratio: 1; display: flex; align-items: center; justify-content: center;
+    font-size: 120px; background: var(--bg2);
+  }
+  .nft-detail-info { padding: 24px; }
+  .nft-detail-collection { font-size: 13px; color: var(--orange); margin-bottom: 6px; }
+  .nft-detail-name { font-family: 'Syne', sans-serif; font-weight: 800; font-size: 22px; margin-bottom: 8px; }
+  .nft-detail-desc { font-size: 14px; color: var(--text2); margin-bottom: 16px; line-height: 1.6; }
+  .nft-price-big { font-family: 'Space Mono', monospace; font-size: 24px; color: var(--orange); font-weight: 700; margin-bottom: 4px; }
+  .nft-traits { display: flex; flex-wrap: wrap; gap: 8px; margin-bottom: 16px; }
+  .trait-chip {
+    background: var(--panel2); border: 1px solid var(--border);
+    border-radius: 8px; padding: 6px 12px;
+  }
+  .trait-key { font-size: 10px; color: var(--text3); text-transform: uppercase; }
+  .trait-val { font-size: 13px; font-weight: 600; color: var(--cyan); }
+  .nft-detail-actions { display: flex; gap: 10px; flex-wrap: wrap; margin-top: 8px; }
+  .btn-detail-buy { flex:1; padding: 12px; border-radius: 10px; background: linear-gradient(135deg,var(--orange),var(--orange2)); border:none; color:#000; font-family:'Syne',sans-serif; font-weight:700; font-size:15px; cursor:pointer; }
+  .btn-detail-swap { flex:1; padding: 12px; border-radius: 10px; background: var(--panel2); border: 1px solid var(--border2); color:var(--text); font-weight:600; font-size:14px; cursor:pointer; }
+  .btn-detail-swap:hover { border-color:var(--cyan); color:var(--cyan); }
+  .nft-detail-bottom { padding: 20px 24px; border-top: 1px solid var(--border); }
+
+  /* MISC */
+  .empty-state { text-align: center; padding: 60px 24px; color: var(--text3); }
+  .empty-icon { font-size: 48px; margin-bottom: 12px; }
+  .two-col { display: grid; grid-template-columns: 1fr 1fr; gap: 24px; }
+  @media(max-width:900px){ .two-col { grid-template-columns: 1fr; } }
+  .tag { padding: 3px 10px; border-radius: 20px; font-size: 11px; font-family: 'Space Mono', monospace; }
+  .tag-orange { background: rgba(247,147,26,0.1); color: var(--orange); border: 1px solid rgba(247,147,26,0.3); }
+  .tag-cyan { background: rgba(0,212,255,0.1); color: var(--cyan); border: 1px solid rgba(0,212,255,0.3); }
+  .tag-green { background: rgba(0,255,136,0.1); color: var(--green); border: 1px solid rgba(0,255,136,0.3); }
+  .divider { height: 1px; background: var(--border); margin: 24px 0; }
+  .mb8 { margin-bottom: 8px; }
+  .mb16 { margin-bottom: 16px; }
+  .mb24 { margin-bottom: 24px; }
+  .mt8 { margin-top: 8px; }
+  .flex-between { display:flex; justify-content:space-between; align-items:center; }
+  .text-right { text-align: right; }
+  .op-btn {
+    padding: 8px 16px; border-radius: 8px;
+    background: var(--panel2); border: 1px solid var(--border2);
+    color: var(--text2); font-size: 13px; cursor: pointer; transition: all 0.2s;
+  }
+  .op-btn:hover { border-color: var(--orange); color: var(--orange); }
+</style>
+</head>
+<body>
+
+<!-- NAVBAR -->
+<nav>
+  <div class="nav-logo" onclick="showPage('market')">
+    <div class="logo-icon">₿</div>
+    <span class="logo-text">BitNFT</span>
+  </div>
+  <div class="nav-tabs">
+    <button class="nav-tab active" onclick="showPage('market',this)">Market</button>
+    <button class="nav-tab" onclick="showPage('trade',this)">Trade</button>
+    <button class="nav-tab" onclick="showPage('create',this)">Create</button>
+    <button class="nav-tab" onclick="showPage('profile',this)">Profile</button>
+  </div>
+  <div class="nav-right">
+    <div class="network-badge">
+      <div class="net-dot"></div>
+      OpNet Testnet
+    </div>
+    <button class="connect-btn" id="connectBtn" onclick="openWalletModal()">Connect Wallet</button>
+  </div>
+</nav>
+
+<!-- ==================== MARKET PAGE ==================== -->
+<div id="page-market" class="page active">
+  <div class="container">
+    <div class="hero">
+      <div class="hero-glow"></div>
+      <h1>Bitcoin NFTs on<br><span>OpNet Testnet</span></h1>
+      <p>Trade, mint, and swap native Bitcoin NFTs powered by OP_NET Layer 1 protocol</p>
+      <div class="hero-stats">
+        <div class="hero-stat"><div class="hero-stat-val" id="hs-vol">1,247</div><div class="hero-stat-lbl">tBTC Volume</div></div>
+        <div class="hero-stat"><div class="hero-stat-val" id="hs-nfts">8,392</div><div class="hero-stat-lbl">NFTs Listed</div></div>
+        <div class="hero-stat"><div class="hero-stat-val" id="hs-traders">2,841</div><div class="hero-stat-lbl">Traders</div></div>
+        <div class="hero-stat"><div class="hero-stat-val" id="hs-floor">0.42</div><div class="hero-stat-lbl">Avg Floor (tBTC)</div></div>
+      </div>
+    </div>
+
+    <!-- TOP COLLECTIONS -->
+    <div class="section-title"><div class="dot"></div>Top Collections by Volume</div>
+    <div class="panel mb24" id="leaderboardPanel">
+      <div class="flex-between mb16">
+        <div class="page-tabs" style="margin-bottom:0">
+          <div class="page-tab active" onclick="switchLeaderboard('24h',this)">24H</div>
+          <div class="page-tab" onclick="switchLeaderboard('7d',this)">7D</div>
+          <div class="page-tab" onclick="switchLeaderboard('30d',this)">30D</div>
+          <div class="page-tab" onclick="switchLeaderboard('all',this)">All</div>
+        </div>
+        <span class="tag tag-orange">🔥 Live Data</span>
+      </div>
+      <table class="leaderboard-table" id="leaderboardTable"><tbody></tbody></table>
+    </div>
+
+    <!-- TRENDING NFTs -->
+    <div class="section-title"><div class="dot"></div>Trending NFTs</div>
+    <div class="filter-row" id="marketFilters">
+      <input type="text" class="search-input" placeholder="🔍  Search NFTs..." oninput="filterMarket(this.value)">
+      <div class="filter-chip active" onclick="setFilter('all',this)">All</div>
+      <div class="filter-chip" onclick="setFilter('bitcoin-apes',this)">Bitcoin Apes</div>
+      <div class="filter-chip" onclick="setFilter('satoshi-punks',this)">Satoshi Punks</div>
+      <div class="filter-chip" onclick="setFilter('ordinal-beasts',this)">Ordinal Beasts</div>
+      <div class="filter-chip" onclick="setFilter('btc-artifacts',this)">BTC Artifacts</div>
+      <div class="filter-chip" onclick="setFilter('op-genesis',this)">OP Genesis</div>
+    </div>
+    <div class="nft-grid" id="marketGrid"></div>
+  </div>
+</div>
+
+<!-- ==================== TRADE PAGE ==================== -->
+<div id="page-trade" class="page">
+  <div class="container">
+    <div style="padding:20px 0 10px">
+      <div class="section-title"><div class="dot"></div>NFT Trading Desk</div>
+    </div>
+
+    <!-- STATS ROW -->
+    <div class="stats-row" id="tradeStats">
+      <div class="stat-card"><div class="stat-label">24H Volume</div><div class="stat-value" style="color:var(--orange)">847 tBTC</div><div class="stat-change up">↑ +23.4%</div></div>
+      <div class="stat-card"><div class="stat-label">Total Trades</div><div class="stat-value" style="color:var(--cyan)">3,291</div><div class="stat-change up">↑ +12.1%</div></div>
+      <div class="stat-card"><div class="stat-label">Active Listings</div><div class="stat-value" style="color:var(--purple)">8,392</div><div class="stat-change down">↓ -2.3%</div></div>
+      <div class="stat-card"><div class="stat-label">Avg Sale Price</div><div class="stat-value" style="color:var(--green)">0.24 tBTC</div><div class="stat-change up">↑ +5.7%</div></div>
+      <div class="stat-card"><div class="stat-label">PILL Swaps</div><div class="stat-value" style="color:var(--pill-color)">492</div><div class="stat-change up">↑ +44%</div></div>
+      <div class="stat-card"><div class="stat-label">MOTO Swaps</div><div class="stat-value" style="color:var(--moto-color)">318</div><div class="stat-change up">↑ +31%</div></div>
+    </div>
+
+    <div class="two-col">
+      <!-- ALL LISTED NFTs -->
+      <div>
+        <div class="section-title"><div class="dot"></div>All Listed NFTs</div>
+        <div class="filter-row">
+          <input type="text" class="search-input" placeholder="🔍  Search..." oninput="filterTrade(this.value)">
+          <select class="form-select" style="width:auto;padding:8px 16px;border-radius:20px;font-size:13px" onchange="sortTrade(this.value)">
+            <option value="price-asc">Price ↑</option>
+            <option value="price-desc">Price ↓</option>
+            <option value="vol-desc">Volume ↓</option>
+            <option value="recent">Recent</option>
+          </select>
+        </div>
+        <div id="tradeList" style="display:flex;flex-direction:column;gap:10px;max-height:600px;overflow-y:auto"></div>
+      </div>
+
+      <!-- RECENT TRADES -->
+      <div>
+        <div class="section-title"><div class="dot"></div>Recent Trades</div>
+        <div id="recentTrades" class="activity-list"></div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ==================== CREATE PAGE ==================== -->
+<div id="page-create" class="page">
+  <div class="container">
+    <div style="padding:20px 0 10px">
+      <div class="section-title"><div class="dot"></div>Mint NFT on OpNet</div>
+    </div>
+    <div class="create-form">
+      <!-- LEFT: Upload & Preview -->
+      <div>
+        <div class="panel mb16">
+          <div class="panel-title">🎨 NFT Artwork</div>
+          <div class="upload-zone" onclick="simulateUpload()" id="uploadZone">
+            <div class="upload-icon" id="previewEmoji">🖼️</div>
+            <div class="upload-text" id="uploadText">Click to upload artwork<br><small style="color:var(--text3)">PNG, GIF, MP4 · Max 100MB</small></div>
+          </div>
+        </div>
+        <div class="panel">
+          <div class="panel-title">🔖 Traits / Attributes</div>
+          <div id="traitsList"></div>
+          <button class="btn-add-trait" onclick="addTrait()">+ Add Trait</button>
+        </div>
+      </div>
+      <!-- RIGHT: Details Form -->
+      <div>
+        <div class="panel">
+          <div class="panel-title">📋 NFT Details</div>
+          <div class="form-group">
+            <label class="form-label">NFT Name</label>
+            <input class="form-input" id="nftName" placeholder="e.g. Bitcoin Ape #4291">
+          </div>
+          <div class="form-group">
+            <label class="form-label">Collection</label>
+            <select class="form-select" id="nftCollection">
+              <option value="">Select or create collection...</option>
+              <option>Bitcoin Apes</option>
+              <option>Satoshi Punks</option>
+              <option>Ordinal Beasts</option>
+              <option>BTC Artifacts</option>
+              <option>OP Genesis</option>
+              <option value="new">+ Create New Collection</option>
+            </select>
+          </div>
+          <div class="form-group">
+            <label class="form-label">Description</label>
+            <textarea class="form-textarea" id="nftDesc" placeholder="Describe your NFT..."></textarea>
+          </div>
+          <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px">
+            <div class="form-group">
+              <label class="form-label">List Price (tBTC)</label>
+              <input class="form-input" id="nftPrice" type="number" step="0.001" placeholder="0.000">
+            </div>
+            <div class="form-group">
+              <label class="form-label">Royalty %</label>
+              <input class="form-input" id="nftRoyalty" type="number" min="0" max="20" placeholder="5">
+            </div>
+          </div>
+          <div class="form-group">
+            <label class="form-label">Supply</label>
+            <select class="form-select" id="nftSupply">
+              <option value="1">1/1 (Unique)</option>
+              <option value="10">Edition of 10</option>
+              <option value="100">Edition of 100</option>
+              <option value="custom">Custom</option>
+            </select>
+          </div>
+          <div class="form-group">
+            <label class="form-label">Accept Swap For</label>
+            <div style="display:flex;gap:8px;flex-wrap:wrap">
+              <label style="display:flex;align-items:center;gap:6px;cursor:pointer">
+                <input type="checkbox" id="swapTBTC" checked style="accent-color:var(--orange)"> <span style="color:var(--tbtc-color);font-weight:600">tBTC</span>
+              </label>
+              <label style="display:flex;align-items:center;gap:6px;cursor:pointer">
+                <input type="checkbox" id="swapPILL" style="accent-color:var(--pill-color)"> <span style="color:var(--pill-color);font-weight:600">PILL</span>
+              </label>
+              <label style="display:flex;align-items:center;gap:6px;cursor:pointer">
+                <input type="checkbox" id="swapMOTO" style="accent-color:var(--moto-color)"> <span style="color:var(--moto-color);font-weight:600">MOTO</span>
+              </label>
+            </div>
+          </div>
+
+          <!-- MINT COST BREAKDOWN -->
+          <div style="background:var(--bg3);border:1px solid var(--border);border-radius:10px;padding:14px;margin-bottom:16px">
+            <div class="flex-between mb8" style="font-size:13px;color:var(--text2)">
+              <span>Minting Fee</span><span style="font-family:'Space Mono',monospace">0.0001 tBTC</span>
+            </div>
+            <div class="flex-between mb8" style="font-size:13px;color:var(--text2)">
+              <span>Network Gas</span><span style="font-family:'Space Mono',monospace">~satoshis</span>
+            </div>
+            <div class="divider" style="margin:8px 0"></div>
+            <div class="flex-between" style="font-size:14px;font-weight:600">
+              <span>Total Est.</span><span style="color:var(--orange);font-family:'Space Mono',monospace">0.0001 tBTC</span>
+            </div>
+          </div>
+
+          <button class="btn-mint" onclick="mintNFT()">⚡ Mint on OpNet Testnet</button>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ==================== PROFILE PAGE ==================== -->
+<div id="page-profile" class="page">
+  <div class="container">
+    <div style="padding:20px 0 10px">
+      <div class="section-title"><div class="dot"></div>My Profile</div>
+    </div>
+
+    <div id="profileNotConnected" class="empty-state panel">
+      <div class="empty-icon">👛</div>
+      <h3 style="font-family:'Syne',sans-serif;margin-bottom:8px">Connect Your Wallet</h3>
+      <p style="color:var(--text2);margin-bottom:20px">Connect your OP_NET wallet to view your NFTs and activity</p>
+      <button class="connect-btn" onclick="openWalletModal()" style="margin:0 auto;display:block">Connect OP_NET Wallet</button>
+    </div>
+
+    <div id="profileConnected" style="display:none">
+      <div class="profile-header">
+        <div class="profile-avatar">👤</div>
+        <div style="flex:1">
+          <div class="profile-name" id="profileName">Anon Trader</div>
+          <div class="profile-address" id="profileAddr">bc1testnet...not connected</div>
+          <div class="profile-stats">
+            <div><div class="profile-stat-val" id="profileNFTs">12</div><div class="profile-stat-lbl">NFTs Held</div></div>
+            <div><div class="profile-stat-val" id="profileTrades">47</div><div class="profile-stat-lbl">Total Trades</div></div>
+            <div><div class="profile-stat-val" id="profileVol">8.42</div><div class="profile-stat-lbl">Vol (tBTC)</div></div>
+            <div><div class="profile-stat-val" id="profileCreated">3</div><div class="profile-stat-lbl">Created</div></div>
+          </div>
+        </div>
+        <button class="op-btn" onclick="showToast('📋 Address copied!','info')">Copy Address</button>
+      </div>
+
+      <div class="page-tabs mb24">
+        <div class="page-tab active" onclick="switchProfileTab('holdings',this)">Holdings</div>
+        <div class="page-tab" onclick="switchProfileTab('activity',this)">Activity</div>
+        <div class="page-tab" onclick="switchProfileTab('selling',this)">Selling Progress</div>
+        <div class="page-tab" onclick="switchProfileTab('created',this)">Created</div>
+      </div>
+
+      <div id="profile-tab-holdings">
+        <div class="nft-grid" id="holdingsGrid"></div>
+      </div>
+      <div id="profile-tab-activity" style="display:none">
+        <div class="activity-list" id="activityList"></div>
+      </div>
+      <div id="profile-tab-selling" style="display:none">
+        <div id="sellingList" style="display:flex;flex-direction:column;gap:14px"></div>
+      </div>
+      <div id="profile-tab-created" style="display:none">
+        <div class="nft-grid" id="createdGrid"></div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ==================== SWAP MODAL ==================== -->
+<div class="modal-overlay" id="swapModal">
+  <div class="modal">
+    <button class="modal-close" onclick="closeSwap()">✕</button>
+    <div class="modal-title">⚡ Swap NFT for Tokens</div>
+    <div class="swap-nft-preview" id="swapPreview"></div>
+    <div style="font-size:13px;color:var(--text2);margin-bottom:10px;">Select token to receive:</div>
+    <div class="token-selector">
+      <div class="token-option" id="tok-tbtc" onclick="selectToken('tbtc')">
+        <div class="token-icon">₿</div>
+        <div class="token-name" style="color:var(--tbtc-color)">tBTC</div>
+        <div class="token-rate" id="rate-tbtc">1:1</div>
+      </div>
+      <div class="token-option" id="tok-pill" onclick="selectToken('pill')">
+        <div class="token-icon">💊</div>
+        <div class="token-name" style="color:var(--pill-color)">PILL</div>
+        <div class="token-rate" id="rate-pill">x1,200</div>
+      </div>
+      <div class="token-option" id="tok-moto" onclick="selectToken('moto')">
+        <div class="token-icon">🏍️</div>
+        <div class="token-name" style="color:var(--moto-color)">MOTO</div>
+        <div class="token-rate" id="rate-moto">x850</div>
+      </div>
+    </div>
+    <div class="swap-amount-box">
+      <div class="swap-amount-label">You will receive (estimated)</div>
+      <div class="swap-amount-val" id="swapAmountVal">—</div>
+      <div class="swap-amount-token" id="swapAmountToken">Select a token above</div>
+    </div>
+    <div style="font-size:12px;color:var(--text3);margin-bottom:14px">⚠️ Swap rates based on current market value on OpNet Testnet. Slippage: 0.5%</div>
+    <button class="btn-confirm-swap" onclick="confirmSwap()">Confirm Swap on OpNet</button>
+  </div>
+</div>
+
+<!-- ==================== NFT DETAIL MODAL ==================== -->
+<div class="modal-overlay" id="nftDetailModal">
+  <div class="nft-detail-modal">
+    <button class="modal-close" onclick="closeDetail()" style="z-index:10">✕</button>
+    <div class="nft-detail-top">
+      <div class="nft-detail-art" id="detailArt"></div>
+      <div class="nft-detail-info">
+        <div class="nft-detail-collection" id="detailColl"></div>
+        <div class="nft-detail-name" id="detailName"></div>
+        <div class="nft-detail-desc" id="detailDesc"></div>
+        <div class="nft-price-big" id="detailPrice"></div>
+        <div style="font-size:12px;color:var(--text3);margin-bottom:12px" id="detailUSD"></div>
+        <div class="nft-traits" id="detailTraits"></div>
+        <div class="nft-detail-actions">
+          <button class="btn-detail-buy" id="detailBuyBtn">Buy Now</button>
+          <button class="btn-detail-swap" onclick="openSwapFromDetail()">Swap ⇄</button>
+        </div>
+      </div>
+    </div>
+    <div class="nft-detail-bottom">
+      <div style="display:grid;grid-template-columns:repeat(4,1fr);gap:16px">
+        <div><div class="stat-label">Volume</div><div style="font-family:'Space Mono',monospace;font-size:14px" id="detailVol"></div></div>
+        <div><div class="stat-label">Sales</div><div style="font-family:'Space Mono',monospace;font-size:14px" id="detailSales"></div></div>
+        <div><div class="stat-label">Owners</div><div style="font-family:'Space Mono',monospace;font-size:14px" id="detailOwners"></div></div>
+        <div><div class="stat-label">Last Sale</div><div style="font-family:'Space Mono',monospace;font-size:14px" id="detailLast"></div></div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ==================== WALLET MODAL ==================== -->
+<div class="modal-overlay" id="walletModal">
+  <div class="wallet-modal">
+    <button class="modal-close" onclick="closeWallet()">✕</button>
+    <div class="modal-title">🔗 Connect Wallet</div>
+    <p style="font-size:13px;color:var(--text2);margin-bottom:18px">Connect your OP_NET compatible wallet to start trading</p>
+    <div class="wallet-option" onclick="connectOpNet()">
+      <div class="wallet-logo">🟠</div>
+      <div>
+        <div class="wallet-name">OP_NET Wallet</div>
+        <div class="wallet-desc">Official OpNet Testnet wallet · Recommended</div>
+      </div>
+      <span class="tag tag-orange" style="margin-left:auto">Primary</span>
+    </div>
+    <div class="wallet-option" onclick="showToast('UniSat integration coming soon','info')">
+      <div class="wallet-logo">🦄</div>
+      <div>
+        <div class="wallet-name">UniSat Wallet</div>
+        <div class="wallet-desc">Bitcoin browser extension</div>
+      </div>
+    </div>
+    <div style="margin-top:16px;padding:14px;background:var(--bg3);border-radius:10px;font-size:12px;color:var(--text3)">
+      🔒 Only OP_NET testnet wallets are supported. Mainnet transactions not enabled.
+    </div>
+  </div>
+</div>
+
+<!-- TOAST -->
+<div class="toast" id="toast">
+  <span class="toast-icon" id="toastIcon">✅</span>
+  <span class="toast-text" id="toastText">Action completed</span>
+</div>
+
+<script>
+// ============================================================
+// DATA LAYER
+// ============================================================
+const EMOJIS = ['🦍','👾','🐉','🦊','🤖','👽','🦄','🐺','🔥','💎','⚡','🌙','🎭','🃏','🏴‍☠️','🦁','🐯','🦅','🐲','🌌'];
+const COLLECTIONS = ['Bitcoin Apes','Satoshi Punks','Ordinal Beasts','BTC Artifacts','OP Genesis'];
+const COL_SLUGS = ['bitcoin-apes','satoshi-punks','ordinal-beasts','btc-artifacts','op-genesis'];
+const COL_EMOJIS = ['🦍','👾','🐉','💎','⚡'];
+const NAMES = ['Satoshi','Nakamoto','Cipher','Rune','Bitwise','Zero','Nexus','Phantom','Genesis','Apex','Vortex','Neon','Flux','Qubit','Omega','Alpha','Delta','Sigma','Titan','Ether'];
+
+function rand(min,max){return Math.floor(Math.random()*(max-min+1))+min;}
+function randF(min,max,dec=3){return parseFloat((Math.random()*(max-min)+min).toFixed(dec));}
+function pick(arr){return arr[rand(0,arr.length-1)];}
+
+function genNFT(id, forced={}){
+  const colIdx = forced.colIdx !== undefined ? forced.colIdx : rand(0,4);
+  const price = randF(0.01,5.0,3);
+  const vol = randF(1,300,1);
+  return {
+    id, colIdx,
+    collection: COLLECTIONS[colIdx],
+    slug: COL_SLUGS[colIdx],
+    name: `${NAMES[rand(0,NAMES.length-1)]} #${id}`,
+    emoji: EMOJIS[rand(0,EMOJIS.length-1)],
+    price, vol,
+    usd: (price * 65000).toFixed(0),
+    sales: rand(1,200),
+    owners: rand(1,50),
+    lastSale: randF(0.01,5.0,3),
+    hot: Math.random()>0.82,
+    desc: `A rare digital artifact inscribed on Bitcoin via OpNet. One of the most sought-after pieces in the ${COLLECTIONS[colIdx]} collection.`,
+    traits: [
+      {k:'Background',v:pick(['Cosmic','Void','Neon','Desert','Ocean'])},
+      {k:'Rarity',v:pick(['Common','Uncommon','Rare','Epic','Legendary'])},
+      {k:'Type',v:pick(['OG','Genesis','Limited','Special'])},
+    ],
+    bg: `hsl(${rand(0,360)},40%,12%)`,
+    listedAt: Date.now() - rand(0,86400000*7),
+    ...forced
+  };
+}
+
+let NFTs = [];
+for(let i=1;i<=48;i++) NFTs.push(genNFT(i));
+
+// My holdings (fake)
+const MY_HOLDINGS = [0,3,7,11,14,19,22,28,31,37,40,44].map(i=>NFTs[i]||genNFT(i+100,{colIdx:rand(0,4)}));
+const MY_CREATED = [2,8,15].map(i=>NFTs[i]||genNFT(i+200,{colIdx:rand(0,4)}));
+
+// Collections aggregated
+const COLL_DATA = COLLECTIONS.map((name,i)=>{
+  const items = NFTs.filter(n=>n.colIdx===i);
+  return {
+    name, emoji: COL_EMOJIS[i],
+    items: items.length,
+    vol24h: items.reduce((a,b)=>a+b.vol,0).toFixed(1),
+    floor: Math.min(...items.map(n=>n.price)).toFixed(3),
+    sales: items.reduce((a,b)=>a+b.sales,0),
+  };
+}).sort((a,b)=>b.vol24h-a.vol24h);
+
+const TOKENS = {
+  tbtc: {name:'tBTC',icon:'₿',rate:1,color:'var(--tbtc-color)'},
+  pill: {name:'PILL',icon:'💊',rate:1200,color:'var(--pill-color)'},
+  moto: {name:'MOTO',icon:'🏍️',rate:850,color:'var(--moto-color)'},
+};
+
+let walletConnected = false;
+let walletAddress = '';
+let currentFilter = 'all';
+let currentSwapNFT = null;
+let selectedToken = null;
+let currentDetailNFT = null;
+
+// ============================================================
+// RENDER FUNCTIONS
+// ============================================================
+function nftCardHTML(nft, showActions=true){
+  const pct = Math.min(100,(nft.vol/300)*100);
+  return `<div class="nft-card" onclick="openDetail(${nft.id})">
+    ${nft.hot?'<div class="hot-badge">🔥 HOT</div>':''}
+    <div class="nft-card-img" style="background:${nft.bg}">
+      <span style="font-size:72px">${nft.emoji}</span>
+      <div class="nft-card-badge">#${nft.id}</div>
+    </div>
+    <div class="nft-card-body">
+      <div class="nft-card-name">${nft.name}</div>
+      <div class="nft-card-col">${nft.collection}</div>
+      <div class="nft-card-row">
+        <div><div class="nft-price">${nft.price} tBTC</div><div class="nft-price-usd">≈$${Number(nft.usd).toLocaleString()}</div></div>
+        <div class="nft-vol">Vol: ${nft.vol} tBTC</div>
+      </div>
+      <div class="vol-bar-wrap mt8">
+        <div style="width:100%;background:var(--bg3);border-radius:2px;height:3px">
+          <div style="width:${pct}%;height:100%;border-radius:2px;background:linear-gradient(90deg,var(--orange),var(--cyan))"></div>
+        </div>
+      </div>
+      ${showActions?`<div class="nft-card-actions" onclick="event.stopPropagation()">
+        <button class="btn-buy" onclick="buyNFT(${nft.id})">Buy</button>
+        <button class="btn-swap" onclick="openSwap(${nft.id})">⇄ Swap</button>
+      </div>`:''}
+    </div>
+  </div>`;
+}
+
+function renderMarketGrid(list){
+  const grid = document.getElementById('marketGrid');
+  grid.innerHTML = list.length ? list.map(n=>nftCardHTML(n)).join('') : '<div class="empty-state" style="grid-column:1/-1"><div class="empty-icon">🔍</div><p>No NFTs found</p></div>';
+}
+
+function renderLeaderboard(){
+  const tbody = document.querySelector('#leaderboardTable tbody');
+  const maxVol = Math.max(...COLL_DATA.map(c=>c.vol24h));
+  tbody.innerHTML = COLL_DATA.map((c,i)=>`
+    <tr class="rank-${i+1}">
+      <td><span class="rank-num">${i+1}</span></td>
+      <td><div class="coll-info">
+        <div class="coll-thumb" style="background:var(--panel2)">${c.emoji}</div>
+        <div><div class="coll-name">${c.name}</div><div class="coll-items">${c.items} items</div></div>
+      </div></td>
+      <td><span style="font-family:'Space Mono',monospace;color:var(--orange)">${c.vol24h} tBTC</span></td>
+      <td><div class="vol-bar-wrap"><div class="vol-bar" style="width:${Math.round((c.vol24h/maxVol)*120)}px"></div></div></td>
+      <td><span style="font-family:'Space Mono',monospace;font-size:13px">${c.floor} tBTC</span></td>
+      <td><span class="tag tag-cyan">${c.sales}</span></td>
+    </tr>
+  `).join('');
+}
+
+function renderTradeList(list){
+  const el = document.getElementById('tradeList');
+  el.innerHTML = list.map(nft=>`
+    <div class="activity-item" onclick="openDetail(${nft.id})" style="cursor:pointer">
+      <div style="font-size:36px;background:${nft.bg};width:48px;height:48px;border-radius:8px;display:flex;align-items:center;justify-content:center;flex-shrink:0">${nft.emoji}</div>
+      <div style="flex:1">
+        <div style="font-size:14px;font-weight:600">${nft.name}</div>
+        <div style="font-size:12px;color:var(--text3)">${nft.collection} · Vol: ${nft.vol} tBTC</div>
+      </div>
+      <div style="text-align:right">
+        <div style="font-family:'Space Mono',monospace;color:var(--orange);font-size:14px">${nft.price} tBTC</div>
+        <div style="font-size:11px;color:var(--text3)">$${Number(nft.usd).toLocaleString()}</div>
+        <div style="display:flex;gap:6px;margin-top:6px;justify-content:flex-end" onclick="event.stopPropagation()">
+          <button class="btn-buy" style="padding:5px 12px;font-size:12px" onclick="buyNFT(${nft.id})">Buy</button>
+          <button class="btn-swap" style="padding:5px 10px;font-size:11px" onclick="openSwap(${nft.id})">⇄</button>
+        </div>
+      </div>
+    </div>
+  `).join('');
+}
+
+function renderRecentTrades(){
+  const fakeTypes = ['Sold','Bought','Minted','Swapped'];
+  const fakeTokens = ['tBTC','PILL','MOTO'];
+  const el = document.getElementById('recentTrades');
+  const recent = [...NFTs].sort(()=>Math.random()-0.5).slice(0,10);
+  el.innerHTML = recent.map(nft=>{
+    const type = pick(fakeTypes);
+    const token = pick(fakeTokens);
+    const ago = `${rand(1,59)}m ago`;
+    const statusMap = {Sold:'status-completed',Bought:'status-completed',Minted:'status-listed',Swapped:'status-swapped'};
+    return `<div class="activity-item">
+      <div style="font-size:28px">${nft.emoji}</div>
+      <div class="activity-info">
+        <div class="activity-title">${type}: ${nft.name}</div>
+        <div class="activity-sub">${nft.collection} · ${ago}</div>
+      </div>
+      <div class="activity-right">
+        <div class="activity-price">${nft.price} ${type==='Swapped'?token:'tBTC'}</div>
+        <div class="activity-status ${statusMap[type]}">${type}</div>
+      </div>
+    </div>`;
+  }).join('');
+}
+
+function renderHoldings(){
+  document.getElementById('holdingsGrid').innerHTML = MY_HOLDINGS.map(n=>nftCardHTML(n)).join('');
+}
+
+function renderActivity(){
+  const types = [{t:'Bought',s:'status-completed',i:'🛒'},{t:'Sold',s:'status-completed',i:'💰'},{t:'Listed',s:'status-listed',i:'📋'},{t:'Swapped',s:'status-swapped',i:'⚡'},{t:'Minted',s:'status-listed',i:'✨'}];
+  const el = document.getElementById('activityList');
+  const acts = [...NFTs].sort(()=>Math.random()-0.5).slice(0,12).map(nft=>{
+    const type = pick(types);
+    return {nft, ...type, ago: `${rand(1,72)}h ago`, price: nft.price};
+  });
+  el.innerHTML = acts.map(a=>`
+    <div class="activity-item">
+      <div class="activity-icon">${a.i}</div>
+      <div class="activity-info">
+        <div class="activity-title">${a.t} ${a.nft.name}</div>
+        <div class="activity-sub">${a.nft.collection} · ${a.ago}</div>
+      </div>
+      <div class="activity-right">
+        <div class="activity-price">${a.price} tBTC</div>
+        <div class="activity-status ${a.s}">${a.t}</div>
+      </div>
+    </div>
+  `).join('');
+}
+
+function renderSelling(){
+  const el = document.getElementById('sellingList');
+  const selling = MY_HOLDINGS.slice(0,5).map(nft=>({
+    nft,
+    status: pick(['Listed','Pending','Sold']),
+    listedAt: `${rand(1,14)}d ago`,
+    views: rand(10,400),
+    offers: rand(0,8),
+    progress: rand(20,100),
+  }));
+  el.innerHTML = selling.map(s=>`
+    <div class="panel">
+      <div class="flex-between mb8">
+        <div style="display:flex;align-items:center;gap:12px">
+          <div style="font-size:36px;background:${s.nft.bg};width:48px;height:48px;border-radius:8px;display:flex;align-items:center;justify-content:center">${s.nft.emoji}</div>
+          <div>
+            <div style="font-weight:600;font-size:15px">${s.nft.name}</div>
+            <div style="font-size:12px;color:var(--text3)">${s.nft.collection} · Listed ${s.listedAt}</div>
+          </div>
+        </div>
+        <div style="text-align:right">
+          <div style="font-family:'Space Mono',monospace;color:var(--orange);font-size:15px">${s.nft.price} tBTC</div>
+          <span class="activity-status ${s.status==='Sold'?'status-completed':s.status==='Pending'?'status-pending':'status-listed'}">${s.status}</span>
+        </div>
+      </div>
+      <div style="display:flex;gap:20px;font-size:13px;color:var(--text2);margin-bottom:10px">
+        <span>👁️ ${s.views} views</span>
+        <span>🤝 ${s.offers} offers</span>
+        <span>📊 ${s.progress}% progress</span>
+      </div>
+      <div class="progress-track"><div class="progress-fill" style="width:${s.progress}%"></div></div>
+      <div style="display:flex;gap:8px;margin-top:10px" >
+        <button class="op-btn" onclick="showToast('📋 Listing updated','success')">Edit Listing</button>
+        <button class="op-btn" onclick="showToast('❌ Listing cancelled','info')">Cancel</button>
+        ${s.offers>0?`<button class="btn-buy" style="padding:8px 16px;font-size:13px" onclick="showToast('✅ Offer accepted!','success')">Accept Best Offer</button>`:''}
+      </div>
+    </div>
+  `).join('');
+}
+
+function renderCreated(){
+  document.getElementById('createdGrid').innerHTML = MY_CREATED.map(n=>nftCardHTML(n)).join('');
+}
+
+// ============================================================
+// INTERACTIONS
+// ============================================================
+function showPage(name, tab){
+  document.querySelectorAll('.page').forEach(p=>p.classList.remove('active'));
+  document.getElementById('page-'+name).classList.add('active');
+  if(tab){
+    document.querySelectorAll('.nav-tab').forEach(t=>t.classList.remove('active'));
+    tab.classList.add('active');
+  } else {
+    const tabs = document.querySelectorAll('.nav-tab');
+    const pages = ['market','trade','create','profile'];
+    tabs.forEach((t,i)=>{
+      t.classList.toggle('active', pages[i]===name);
+    });
+  }
+  if(name==='market'){ renderMarketGrid(NFTs.slice(0,24)); renderLeaderboard(); }
+  if(name==='trade'){ renderTradeList(NFTs.slice(0,20)); renderRecentTrades(); }
+  if(name==='profile' && walletConnected){ renderHoldings(); }
+}
+
+function filterMarket(val){
+  const q = val.toLowerCase();
+  const list = NFTs.filter(n=>
+    (currentFilter==='all'||n.slug===currentFilter) &&
+    (n.name.toLowerCase().includes(q)||n.collection.toLowerCase().includes(q))
+  );
+  renderMarketGrid(list);
+}
+
+function setFilter(slug, el){
+  currentFilter = slug;
+  document.querySelectorAll('#marketFilters .filter-chip').forEach(c=>c.classList.remove('active'));
+  el.classList.add('active');
+  filterMarket(document.querySelector('.search-input')?.value||'');
+}
+
+function filterTrade(val){
+  const q = val.toLowerCase();
+  renderTradeList(NFTs.filter(n=>n.name.toLowerCase().includes(q)||n.collection.toLowerCase().includes(q)));
+}
+
+function sortTrade(val){
+  let sorted = [...NFTs];
+  if(val==='price-asc') sorted.sort((a,b)=>a.price-b.price);
+  if(val==='price-desc') sorted.sort((a,b)=>b.price-a.price);
+  if(val==='vol-desc') sorted.sort((a,b)=>b.vol-a.vol);
+  if(val==='recent') sorted.sort((a,b)=>b.listedAt-a.listedAt);
+  renderTradeList(sorted.slice(0,20));
+}
+
+function switchLeaderboard(period, el){
+  el.closest('.page-tabs').querySelectorAll('.page-tab').forEach(t=>t.classList.remove('active'));
+  el.classList.add('active');
+  // Shuffle slightly for effect
+  COLL_DATA.sort(()=>Math.random()-0.5);
+  renderLeaderboard();
+}
+
+function switchProfileTab(tab, el){
+  el.closest('.page-tabs').querySelectorAll('.page-tab').forEach(t=>t.classList.remove('active'));
+  el.classList.add('active');
+  ['holdings','activity','selling','created'].forEach(t=>{
+    document.getElementById('profile-tab-'+t).style.display = t===tab?'block':'none';
+  });
+  if(tab==='activity') renderActivity();
+  if(tab==='selling') renderSelling();
+  if(tab==='created') renderCreated();
+  if(tab==='holdings') renderHoldings();
+}
+
+// ============================================================
+// WALLET
+// ============================================================
+function openWalletModal(){ document.getElementById('walletModal').classList.add('open'); }
+function closeWallet(){ document.getElementById('walletModal').classList.remove('open'); }
+
+function connectOpNet(){
+  closeWallet();
+  // Simulate OP_NET connection
+  walletConnected = true;
+  walletAddress = 'bc1p' + Math.random().toString(36).slice(2,12) + '...testnet';
+  const btn = document.getElementById('connectBtn');
+  btn.textContent = walletAddress.slice(0,16)+'...';
+  btn.classList.add('connected');
+  document.getElementById('profileNotConnected').style.display='none';
+  document.getElementById('profileConnected').style.display='block';
+  document.getElementById('profileAddr').textContent = walletAddress;
+  renderHoldings();
+  showToast('✅ OP_NET Wallet connected!','success');
+}
+
+// ============================================================
+// NFT ACTIONS
+// ============================================================
+function buyNFT(id){
+  if(!walletConnected){ openWalletModal(); return; }
+  const nft = NFTs.find(n=>n.id===id);
+  showToast(`🛒 Buying ${nft.name} for ${nft.price} tBTC...`,'info');
+  setTimeout(()=>showToast(`✅ ${nft.name} purchased! Tx submitted to OpNet`,'success'),1800);
+}
+
+function openSwap(id){
+  if(!walletConnected){ openWalletModal(); return; }
+  currentSwapNFT = NFTs.find(n=>n.id===id)||MY_HOLDINGS.find(n=>n.id===id);
+  selectedToken = null;
+  document.getElementById('swapPreview').innerHTML = `
+    <div class="swap-nft-art">${currentSwapNFT.emoji}</div>
+    <div>
+      <div class="swap-nft-name">${currentSwapNFT.name}</div>
+      <div style="font-size:12px;color:var(--text2)">${currentSwapNFT.collection}</div>
+      <div class="swap-nft-price">${currentSwapNFT.price} tBTC</div>
+    </div>`;
+  document.getElementById('swapAmountVal').textContent='—';
+  document.getElementById('swapAmountToken').textContent='Select a token above';
+  ['tbtc','pill','moto'].forEach(t=>document.getElementById('tok-'+t).className='token-option');
+  document.getElementById('swapModal').classList.add('open');
+}
+
+function openSwapFromDetail(){
+  closeDetail();
+  if(currentDetailNFT) openSwap(currentDetailNFT.id);
+}
+
+function closeSwap(){ document.getElementById('swapModal').classList.remove('open'); }
+
+function selectToken(tok){
+  selectedToken = tok;
+  ['tbtc','pill','moto'].forEach(t=>{
+    document.getElementById('tok-'+t).className = 'token-option' + (t===tok?' selected-'+t:'');
+  });
+  const nftVal = currentSwapNFT.price;
+  const rate = TOKENS[tok].rate;
+  const amount = tok==='tbtc' ? nftVal.toFixed(4) : Math.round(nftVal*rate).toLocaleString();
+  document.getElementById('swapAmountVal').textContent = amount;
+  document.getElementById('swapAmountToken').textContent = TOKENS[tok].name + ' (after 0.5% slippage)';
+  document.getElementById('swapAmountVal').style.color = TOKENS[tok].color;
+}
+
+function confirmSwap(){
+  if(!selectedToken){ showToast('⚠️ Select a token first','info'); return; }
+  closeSwap();
+  showToast(`⚡ Swapping ${currentSwapNFT.name} → ${TOKENS[selectedToken].name}...`,'info');
+  setTimeout(()=>showToast(`✅ Swap confirmed on OpNet Testnet!`,'success'),2000);
+}
+
+// ============================================================
+// NFT DETAIL
+// ============================================================
+function openDetail(id){
+  const nft = NFTs.find(n=>n.id===id) || MY_HOLDINGS.find(n=>n.id===id) || MY_CREATED.find(n=>n.id===id);
+  if(!nft) return;
+  currentDetailNFT = nft;
+  document.getElementById('detailArt').innerHTML = `<span>${nft.emoji}</span>`;
+  document.getElementById('detailArt').style.background = nft.bg;
+  document.getElementById('detailColl').textContent = nft.collection;
+  document.getElementById('detailName').textContent = nft.name;
+  document.getElementById('detailDesc').textContent = nft.desc;
+  document.getElementById('detailPrice').textContent = nft.price + ' tBTC';
+  document.getElementById('detailUSD').textContent = '≈ $' + Number(nft.usd).toLocaleString() + ' USD';
+  document.getElementById('detailVol').textContent = nft.vol + ' tBTC';
+  document.getElementById('detailSales').textContent = nft.sales;
+  document.getElementById('detailOwners').textContent = nft.owners;
+  document.getElementById('detailLast').textContent = nft.lastSale + ' tBTC';
+  document.getElementById('detailTraits').innerHTML = nft.traits.map(t=>`
+    <div class="trait-chip"><div class="trait-key">${t.k}</div><div class="trait-val">${t.v}</div></div>
+  `).join('');
+  document.getElementById('detailBuyBtn').onclick = ()=>{ closeDetail(); buyNFT(nft.id); };
+  document.getElementById('nftDetailModal').classList.add('open');
+}
+function closeDetail(){ document.getElementById('nftDetailModal').classList.remove('open'); }
+
+// ============================================================
+// CREATE NFT
+// ============================================================
+const ARTWORK_OPTIONS = ['🦍','👾','🐉','🦊','🤖','👽','🦄','🐺','🔥','💎','⚡','🌙','🎭','🏴‍☠️','🌌','🧬','🔮','🛸','🗿','🌋'];
+let traitCount = 0;
+function simulateUpload(){
+  const emoji = pick(ARTWORK_OPTIONS);
+  document.getElementById('previewEmoji').textContent = emoji;
+  document.getElementById('uploadText').textContent = 'Artwork selected! Click to change.';
+  showToast('🎨 Artwork uploaded successfully','success');
+}
+function addTrait(){
+  traitCount++;
+  const div = document.createElement('div');
+  div.className = 'trait-row';
+  div.innerHTML = `
+    <input class="form-input" placeholder="Trait type (e.g. Background)" style="flex:1">
+    <input class="form-input" placeholder="Value (e.g. Cosmic)" style="flex:1">
+    <button class="btn-swap" onclick="this.parentElement.remove()" style="flex-shrink:0">✕</button>`;
+  document.getElementById('traitsList').appendChild(div);
+}
+function mintNFT(){
+  if(!walletConnected){ openWalletModal(); return; }
+  const name = document.getElementById('nftName').value;
+  if(!name){ showToast('⚠️ Enter an NFT name','info'); return; }
+  showToast('⛏️ Minting on OpNet Testnet...','info');
+  setTimeout(()=>{
+    showToast(`✅ "${name}" minted! Inscribed on Bitcoin L1`,'success');
+    const newNFT = genNFT(NFTs.length+1, {
+      name,
+      collection: document.getElementById('nftCollection').value || 'Bitcoin Apes',
+      price: parseFloat(document.getElementById('nftPrice').value)||0.1,
+      emoji: document.getElementById('previewEmoji').textContent
+    });
+    NFTs.push(newNFT);
+    MY_CREATED.push(newNFT);
+  }, 2500);
+}
+
+// ============================================================
+// TOAST
+// ============================================================
+let toastTimer;
+function showToast(msg, type='success'){
+  const t = document.getElementById('toast');
+  const icons = {success:'✅',info:'ℹ️',error:'❌'};
+  document.getElementById('toastIcon').textContent = icons[type]||'✅';
+  document.getElementById('toastText').textContent = msg;
+  t.classList.add('show');
+  clearTimeout(toastTimer);
+  toastTimer = setTimeout(()=>t.classList.remove('show'),3000);
+}
+
+// ============================================================
+// LIVE PRICE TICKER (simulated)
+// ============================================================
+function animateStats(){
+  const els = {
+    'hs-vol': ()=>(1200+rand(0,200)).toLocaleString(),
+    'hs-nfts': ()=>(8000+rand(0,800)).toLocaleString(),
+    'hs-traders': ()=>(2700+rand(0,300)).toLocaleString(),
+    'hs-floor': ()=>randF(0.3,0.6,2),
+  };
+  Object.entries(els).forEach(([id,fn])=>{
+    const el = document.getElementById(id);
+    if(el) el.textContent = fn();
+  });
+}
+setInterval(animateStats, 5000);
+
+// Live trade feed
+setInterval(()=>{
+  if(document.getElementById('page-trade').classList.contains('active')){
+    renderRecentTrades();
+  }
+}, 8000);
+
+// ============================================================
+// INIT
+// ============================================================
+showPage('market');
+</script>
+</body>
+</html>
